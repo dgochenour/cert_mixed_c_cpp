@@ -81,7 +81,7 @@ The following assumptions are made:
 On MacOS (Darwin) 
 -----------------
     $ cd your/project/directory 
-    $ $RTIMEHOME/resource/scripts/rtime-make --config Release --build --name x64Darwin17.3.0Clang9.0.0 --target Darwin --source-dir . -G "Unix Makefiles" --delete
+    $ $RTIMEHOME/resource/scripts/rtime-make --config Release --build --name x64Darwin17.3.0Clang9.0 --target Darwin --source-dir . -G "Unix Makefiles" --delete
 
 On Linux
 --------
