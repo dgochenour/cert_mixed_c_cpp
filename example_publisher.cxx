@@ -1,4 +1,4 @@
-// This sample code is intended to show that the Connext DDS Micro 2.4.11
+// This sample code is intended to show that the Connext DDS Micro 2.4.12
 // C API can be called from a C++ application. It is STRICTLY an example and
 // NOT intended to represent production-quality code.
 
