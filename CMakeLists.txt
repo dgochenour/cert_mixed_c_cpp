@@ -77,7 +77,7 @@ set_target_properties(example_subscriber PROPERTIES
 )
 
 ################################################################################
-# example_subscriber
+# example_publisher
 ################################################################################
 add_executable(example_publisher
     ${CMAKE_CURRENT_SOURCE_DIR}/example_publisher.${SOURCE_EXTENSION_CPP}
