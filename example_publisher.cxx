@@ -7,7 +7,7 @@
 
 // headers from Connext DDS Micro installation
 #include "rti_me_c.h"
-#include "disc_dpde/disc_dpde_discovery_plugin.h"
+#include "disc_dpse/disc_dpse_dpsediscovery.h"
 #include "wh_sm/wh_sm_history.h"
 #include "rh_sm/rh_sm_history.h"
 #include "netio/netio_udp.h"
@@ -24,6 +24,8 @@ int main(void)
     std::string peer = "127.0.0.1";
     std::string loopback_name = "lo0";
     std::string eth_nic_name = "en0";
+    std::string local_participant_name = "publisher";
+    std::string remote_participant_name = "subscriber";
     auto domain_id = 100;
 
     DDS_ReturnCode_t retcode;
@@ -92,17 +94,17 @@ int main(void)
         std::cout << "ERROR: failed to re-register udp" << std::endl;
     } 
 
-    // register the dpde (discovery) component
-    struct DPDE_DiscoveryPluginProperty discovery_plugin_properties =
-            DPDE_DiscoveryPluginProperty_INITIALIZER;
+    // register the dpse (discovery) component
+    struct DPSE_DiscoveryPluginProperty discovery_plugin_properties =
+            DPSE_DiscoveryPluginProperty_INITIALIZER;
     if (!RT_Registry_register(
             registry,
-            "dpde",
-            DPDE_DiscoveryFactory_get_interface(),
+            "dpse",
+            DPSE_DiscoveryFactory_get_interface(),
             &discovery_plugin_properties._parent, 
             NULL))
     {
-        std::cout << "ERROR: failed to register dpde" << std::endl;
+        std::cout << "ERROR: failed to register dpse" << std::endl;
     }
 
     // Now that we've finsihed the changes to the registry, we will start 
@@ -120,7 +122,7 @@ int main(void)
             DDS_DomainParticipantQos_INITIALIZER;
     if(!RT_ComponentFactoryId_set_name(
             &dp_qos.discovery.discovery.name,
-            "dpde"))
+            "dpse"))
     {
         std::cout << "ERROR: failed to set discovery plugin name" << std::endl;
     }
@@ -145,6 +147,10 @@ int main(void)
     dp_qos.resource_limits.remote_participant_allocation = 8;
     dp_qos.resource_limits.remote_reader_allocation = 8;
     dp_qos.resource_limits.remote_writer_allocation = 8;
+
+    //  set the name of the local DomainParticipant
+    // (this is required for DPSE discovery)
+    strcpy(dp_qos.participant_name.name,local_participant_name.c_str());
 
     // now the DomainParticipant can be created
     auto dp = DDS_DomainParticipantFactory_create_participant(
@@ -180,6 +186,14 @@ int main(void)
         std::cout << "ERROR: topic == NULL" << std::endl;
     }
 
+    // assert remote DomainParticipant
+    retcode = DPSE_RemoteParticipant_assert(
+            dp, 
+            remote_participant_name.c_str());
+    if(retcode != DDS_RETCODE_OK) {
+        std::cout << "ERROR: failed to assert remote participant" << std::endl;
+    }
+
     // create the Publisher
     auto publisher = DDS_DomainParticipant_create_publisher(
             dp,
@@ -193,6 +207,7 @@ int main(void)
     // Configure the DataWriter's QoS, then create the DataWriter
     struct DDS_DataWriterQos dw_qos = DDS_DataWriterQos_INITIALIZER;
 
+    dw_qos.protocol.rtps_object_id = 100;
     dw_qos.reliability.kind = DDS_RELIABLE_RELIABILITY_QOS;
     dw_qos.resource_limits.max_samples_per_instance = 32;
     dw_qos.resource_limits.max_instances = 2;
@@ -211,6 +226,23 @@ int main(void)
     if(datawriter == NULL) {
         std::cout << "ERROR: datawriter == NULL" << std::endl;
     }   
+
+    // setup information about the subscriber we are expecting to discover 
+    struct DDS_SubscriptionBuiltinTopicData rem_subscription_data =
+            DDS_SubscriptionBuiltinTopicData_INITIALIZER;
+    rem_subscription_data.key.value[DDS_BUILTIN_TOPIC_KEY_OBJECT_ID] = 200;
+    rem_subscription_data.topic_name = DDS_String_dup(my_topic_name);
+    rem_subscription_data.type_name = DDS_String_dup(type_name.c_str());
+    rem_subscription_data.reliability.kind = DDS_RELIABLE_RELIABILITY_QOS;
+
+    retcode = DPSE_RemoteSubscription_assert(
+            dp,
+            remote_participant_name.c_str(),
+            &rem_subscription_data,
+            my_type_get_key_kind(my_typeTypePlugin_get(), NULL));
+    if (retcode != DDS_RETCODE_OK) {
+        std::cout << "ERROR: failed to assert remote publication" << std::endl;
+    }    
 
     // create the data sample that we will write
     auto sample = my_type_create();
