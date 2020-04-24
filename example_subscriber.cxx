@@ -6,7 +6,7 @@
 
 // headers from Connext DDS Micro installation
 #include "rti_me_c.h"
-#include "disc_dpde/disc_dpde_discovery_plugin.h"
+#include "disc_dpse/disc_dpse_dpsediscovery.h"
 #include "wh_sm/wh_sm_history.h"
 #include "rh_sm/rh_sm_history.h"
 #include "netio/netio_udp.h"
@@ -134,17 +134,17 @@ int main(void)
         std::cout << "ERROR: failed to re-register udp" << std::endl;
     } 
 
-    // register the dpde (discovery) component
-    struct DPDE_DiscoveryPluginProperty discovery_plugin_properties =
-            DPDE_DiscoveryPluginProperty_INITIALIZER;
+    // register the dpse (discovery) component
+    struct DPSE_DiscoveryPluginProperty discovery_plugin_properties =
+            DPSE_DiscoveryPluginProperty_INITIALIZER;
     if (!RT_Registry_register(
             registry,
-            "dpde",
-            DPDE_DiscoveryFactory_get_interface(),
+            "dpse",
+            DPSE_DiscoveryFactory_get_interface(),
             &discovery_plugin_properties._parent, 
             NULL))
     {
-        std::cout << "ERROR: failed to register dpde" << std::endl;
+        std::cout << "ERROR: failed to register dpse" << std::endl;
     }
 
     // Now that we've finsihed the changes to the registry, we will start 
@@ -162,7 +162,7 @@ int main(void)
             DDS_DomainParticipantQos_INITIALIZER;
     if(!RT_ComponentFactoryId_set_name(
             &dp_qos.discovery.discovery.name,
-            "dpde"))
+            "dpse"))
     {
         std::cout << "ERROR: failed to set discovery plugin name" << std::endl;
     }
@@ -187,6 +187,10 @@ int main(void)
     dp_qos.resource_limits.remote_participant_allocation = 8;
     dp_qos.resource_limits.remote_reader_allocation = 8;
     dp_qos.resource_limits.remote_writer_allocation = 8;
+
+    //  set the name of the local DomainParticipant
+    // (this is required for DPSE discovery)
+    strcpy(dp_qos.participant_name.name, "subscriber");
 
     // now the DomainParticipant can be created
     auto dp = DDS_DomainParticipantFactory_create_participant(
@@ -222,6 +226,14 @@ int main(void)
         std::cout << "ERROR: topic == NULL" << std::endl;
     }
 
+    // assert remote DomainParticipant
+    retcode = DPSE_RemoteParticipant_assert(
+            dp, 
+            "publisher");
+    if(retcode != DDS_RETCODE_OK) {
+        std::cout << "ERROR: failed to assert remote participant" << std::endl;
+    }
+
     // create the Subscriber
     auto subscriber = DDS_DomainParticipant_create_subscriber(
             dp,
@@ -240,6 +252,7 @@ int main(void)
     // Configure the DataReader's QoS, then create the DataReader
     struct DDS_DataReaderQos dr_qos = DDS_DataReaderQos_INITIALIZER;
 
+    dr_qos.protocol.rtps_object_id = 200;
     dr_qos.reliability.kind = DDS_RELIABLE_RELIABILITY_QOS;
     dr_qos.resource_limits.max_instances = 2;
     dr_qos.resource_limits.max_samples_per_instance = 32;
@@ -257,6 +270,25 @@ int main(void)
             DDS_DATA_AVAILABLE_STATUS);
     if(datareader == NULL) {
         std::cout << "ERROR: datareader == NULL" << std::endl;
+    }
+
+    // setup information about the publisher we are expecting to discover 
+    struct DDS_PublicationBuiltinTopicData rem_publication_data =
+        DDS_PublicationBuiltinTopicData_INITIALIZER;
+    rem_publication_data.key.value[DDS_BUILTIN_TOPIC_KEY_OBJECT_ID] = 100;
+    rem_publication_data.topic_name = DDS_String_dup(my_topic_name);
+    rem_publication_data.type_name = DDS_String_dup(type_name.c_str());
+    rem_publication_data.reliability.kind = DDS_RELIABLE_RELIABILITY_QOS;    
+
+    // now assert the publisher so the local DP knows that we expect to find it
+    retcode = DPSE_RemotePublication_assert(
+            dp,
+            "publisher",
+            &rem_publication_data,
+            my_type_get_key_kind(my_typeTypePlugin_get(), 
+            NULL));
+    if (retcode != DDS_RETCODE_OK) {
+        std::cout << "ERROR: failed to assert remote publication" << std::endl;
     }
 
     // Finaly, now that all of the entities are created, we can enable them all

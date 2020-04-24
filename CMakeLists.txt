@@ -48,7 +48,7 @@ set(IDL_GEN_H
 set(MICRO_C_LIBS 
     rti_me_rhsm${RTI_LIB_SUFFIX} 
     rti_me_whsm${RTI_LIB_SUFFIX} 
-    rti_me_discdpde${RTI_LIB_SUFFIX} 
+    rti_me_discdpse${RTI_LIB_SUFFIX} 
     rti_me${RTI_LIB_SUFFIX}
 )
 
