@@ -86,7 +86,7 @@ On MacOS (Darwin)
 On Linux
 --------
     $ cd your/project/directory 
-    $ $RTIMEHOME/resource/scripts/rtime-make --config Release --build --name x64Linux3gcc4.8.2 --target Linux --source-dir . -G "Unix Makefiles" --delete
+    $ $RTIMEHOME/resource/scripts/rtime-make --config Release --build --name x64Linux4gcc7.3.0 --target Linux --source-dir . -G "Unix Makefiles" --delete
 
 The executables can be found in the ./objs/<architecture> directory
 

@@ -14,7 +14,7 @@ or consult the RTI Data Distribution Service manual.
 #include "rti_me_c.h"
 #endif
 
-#if (defined(RTI_WIN32) || defined(RTI_WIN64) || defined(RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
+#if (defined(RTI_WIN32) || defined(RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
 /* If the code is building on Windows, start exporting symbols. */
 #undef NDDSUSERDllExport
 #define NDDSUSERDllExport __declspec(dllexport)
@@ -68,10 +68,10 @@ extern "C" {
     NDDSUSERDllExport extern RTI_BOOL
     my_type_copy(my_type* dst, const my_type* src);
     #ifdef __cplusplus
-}
+} /* extern "C" */
 #endif
 
-#if (defined(RTI_WIN32) || defined(RTI_WIN64) || defined(RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
+#if (defined(RTI_WIN32) || defined(RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
 /* If the code is building on Windows, stop exporting symbols. */
 #undef NDDSUSERDllExport
 #define NDDSUSERDllExport

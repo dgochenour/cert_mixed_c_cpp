@@ -32,11 +32,15 @@ my_type_cdr_serialize(
     UNUSED_ARG(param);
 
     if (!CDR_Stream_serialize_long(
-        stream, &sample->id)) {
+        stream, &sample->id))
+    {
         return RTI_FALSE;
     }  
     if (!CDR_Stream_serialize_string(
-        stream, sample->msg, (128))) {
+        stream,
+        sample->msg,
+        (128)))
+    {
         return RTI_FALSE;
     }
 
@@ -57,11 +61,15 @@ my_type_cdr_deserialize(
     UNUSED_ARG(param);
 
     if (!CDR_Stream_deserialize_long(
-        stream, &sample->id)) {
+        stream, &sample->id))
+    {
         return RTI_FALSE;
     }  
     if (!CDR_Stream_deserialize_string(
-        stream, sample->msg, (128))) {
+        stream,
+        sample->msg,
+        (128)))
+    {
         return RTI_FALSE;
     }
 
@@ -103,7 +111,8 @@ my_type_cdr_serialize_key(
 
     UNUSED_ARG(param);
     if (!CDR_Stream_serialize_long(
-        stream, &sample->id)) {
+        stream, &sample->id))
+    {
         return RTI_FALSE;
     }  
 
@@ -122,7 +131,8 @@ my_type_cdr_deserialize_key(
 
     UNUSED_ARG(param);
     if (!CDR_Stream_deserialize_long(
-        stream, &sample->id)) {
+        stream, &sample->id))
+    {
         return RTI_FALSE;
     }  
 
@@ -166,8 +176,10 @@ my_typePlugin_delete_sample(
     UNUSED_ARG(plugin);
     UNUSED_ARG(param);
     /* my_type_delete() is a void function
-    which expects (sample != NULL). Since my_typePlugin_delete_sample
-    is an internal function, sample is assumed to be a valid pointer */ 
+    * which expects (sample != NULL). Since 
+    * my_typePlugin_delete_sample
+    * is an internal function, sample is assumed to be a valid pointer 
+    */ 
     my_type_delete((my_type *) sample);
     return RTI_TRUE;
 }

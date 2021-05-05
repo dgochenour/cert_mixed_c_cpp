@@ -5,6 +5,14 @@ PROJECT(example CXX C)
 set(SOURCE_EXTENSION_CPP cxx)
 set(SOURCE_EXTENSION_C c)
 
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    SET(PLATFORM_LIBS dl nsl m pthread rt)
+elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+    SET(PLATFORM_LIBS dl m pthread )
+elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    SET(PLATFORM_LIBS netapi32.lib advapi32.lib user32.lib winmm.lib WS2_32.lib)
+endif()
+
 set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/objs/${RTIME_TARGET_NAME})
@@ -45,6 +53,9 @@ set(IDL_GEN_H
     ${CMAKE_CURRENT_SOURCE_DIR}/exampleSupport.h
 )
 
+# SET(MICRO_C_LIBS rti_me${RTI_LIB_SUFFIX})
+# ADD_DEFINITIONS(-DRTI_CERT)
+
 set(MICRO_C_LIBS 
     rti_me_rhsm${RTI_LIB_SUFFIX} 
     rti_me_whsm${RTI_LIB_SUFFIX} 
@@ -68,7 +79,7 @@ add_executable(example_subscriber
     ${IDL_GEN_H}
 )
 
-target_link_libraries(example_subscriber ${MICRO_C_LIBS})
+target_link_libraries(example_subscriber ${MICRO_C_LIBS} ${PLATFORM_LIBS})
 
 set_target_properties(example_subscriber PROPERTIES
     CXX_STANDARD 11
@@ -85,7 +96,7 @@ add_executable(example_publisher
     ${IDL_GEN_H}
 )
 
-target_link_libraries(example_publisher  ${MICRO_C_LIBS})
+target_link_libraries(example_publisher  ${MICRO_C_LIBS} ${PLATFORM_LIBS})
 
 set_target_properties(example_publisher PROPERTIES
     CXX_STANDARD 11
