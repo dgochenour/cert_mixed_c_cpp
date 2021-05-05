@@ -1,11 +1,18 @@
-// This sample code is intended to show that the Connext DDS Micro 2.4.12
-// C API can be called from a C++ application. It is STRICTLY an example and
-// NOT intended to represent production-quality code.
+// (c) Copyright, Real-Time Innovations, 2021.  All rights reserved.
+// RTI grants Licensee a license to use, modify, compile, and create derivative
+// works of the software solely for use with RTI Connext DDS. Licensee may
+// redistribute copies of the software provided that all such copies are subject
+// to this license. The software is provided "as is", with no warranty of any
+// type, including any warranty for fitness for any purpose. RTI is under no
+// obligation to maintain or support the software. RTI shall not be liable for
+// any incidental or consequential damages arising out of the use or inability
+// to use the software.
 
 #include <iostream>
 #include <sstream>
+#include <unistd.h>
 
-// headers from Connext DDS Micro installation
+// headers from Connext DDS Micro/Cert installation
 #include "rti_me_c.h"
 #include "disc_dpse/disc_dpse_dpsediscovery.h"
 #include "wh_sm/wh_sm_history.h"
@@ -17,21 +24,13 @@
 #include "examplePlugin.h"
 #include "exampleSupport.h"
 
+#include "common_config.h"
+
 
 int main(void)
 {
-    // user-configurable values
-    std::string peer = "127.0.0.1";
-    std::string loopback_name = "lo";
-    std::string eth_nic_name = "wlp0s20f3";
-    std::string local_participant_name = "publisher";
-    std::string remote_participant_name = "subscriber";
-    auto domain_id = 100;
-
     DDS_ReturnCode_t retcode;
 
-    // create the DomainParticipantFactory and registry so that we can make some 
-    // changes to the default values
     auto dpf = DDS_DomainParticipantFactory_get_instance();
     auto registry = DDS_DomainParticipantFactory_get_registry(dpf);
 
@@ -57,7 +56,7 @@ int main(void)
     }
 
     // Set up the UDP transport's allowed interfaces. To do this we:
-    // (1) unregister the UDP trasport
+    // (1) unregister the UDP transport
     // (2) name the allowed interfaces
     // (3) re-register the transport
     if(!RT_Registry_unregister(
@@ -75,15 +74,52 @@ int main(void)
         std::cout << "ERROR: failed to allocate udp properties" << std::endl;
     }
     *udp_property = UDP_INTERFACE_FACTORY_PROPERTY_DEFAULT;
+    udp_property->disable_auto_interface_config = RTI_TRUE;
 
-    // For additional allowed interface(s), increase maximum and length, and
-    // set interface below:
-    REDA_StringSeq_set_maximum(&udp_property->allow_interface,2);
-    REDA_StringSeq_set_length(&udp_property->allow_interface,2);
-    *REDA_StringSeq_get_reference(&udp_property->allow_interface,0) = 
-            DDS_String_dup(loopback_name.c_str()); 
-    *REDA_StringSeq_get_reference(&udp_property->allow_interface,1) = 
-            DDS_String_dup(eth_nic_name.c_str()); 
+    if (!DDS_StringSeq_set_maximum(&udp_property->allow_interface,2))
+    {
+        printf("failed to set allow_interface maximum\n");
+        return -1;
+    }
+    if (!DDS_StringSeq_set_length(&udp_property->allow_interface,2))
+    {
+        printf("failed to set allow_interface length\n");
+        return -1;
+    }
+
+    if (!UDP_InterfaceTableEntrySeq_set_maximum(&udp_property->if_table,2))
+    {
+        printf("failed to set if_table maximum\n");
+        return -1;
+    }
+
+    *DDS_StringSeq_get_reference(&udp_property->allow_interface,0) = 
+            DDS_String_dup("loopback");
+    if (!UDP_InterfaceTable_add_entry(
+            &udp_property->if_table,
+            0x7f000001,
+            0xff000000,
+            "loopback",
+            UDP_INTERFACE_INTERFACE_UP_FLAG))
+
+    {
+        printf("failed to add 'loopback' interface\n");
+        return -1;
+    }
+
+    *DDS_StringSeq_get_reference(&udp_property->allow_interface,1) = 
+            DDS_String_dup("real_nic");
+    if (!UDP_InterfaceTable_add_entry(
+            &udp_property->if_table,
+            0xc0a80174, //192.168.1.116
+            0xffffff00, //255.255.255.0
+            "real_nic",
+            UDP_INTERFACE_INTERFACE_UP_FLAG))
+
+    {
+        printf("failed to add 'real_nic' interface\n");
+        return -1;
+    }
 
     if(!RT_Registry_register(
             registry, 
@@ -107,7 +143,7 @@ int main(void)
         std::cout << "ERROR: failed to register dpse" << std::endl;
     }
 
-    // Now that we've finsihed the changes to the registry, we will start 
+    // Now that we've finished the changes to the registry, we will start 
     // creating DDS entities. By setting autoenable_created_entities to false 
     // until all of the DDS entities are created, we limit all dynamic memory 
     // allocation to happen *before* the point where we enable everything.
@@ -120,10 +156,7 @@ int main(void)
     // configure discovery prior to creating our DomainParticipant
     struct DDS_DomainParticipantQos dp_qos = 
             DDS_DomainParticipantQos_INITIALIZER;
-    if(!RT_ComponentFactoryId_set_name(
-            &dp_qos.discovery.discovery.name,
-            "dpse"))
-    {
+    if(!RT_ComponentFactoryId_set_name(&dp_qos.discovery.discovery.name, "dpse")) {
         std::cout << "ERROR: failed to set discovery plugin name" << std::endl;
     }
     if(!DDS_StringSeq_set_maximum(&dp_qos.discovery.initial_peers, 1)) {
@@ -133,7 +166,7 @@ int main(void)
         std::cout << "ERROR: failed to set initial peers length" << std::endl;
     }
     *DDS_StringSeq_get_reference(&dp_qos.discovery.initial_peers, 0) = 
-            DDS_String_dup(peer.c_str());
+            DDS_String_dup(k_publisher_initial_peer.c_str());
 
     // configure the DomainParticipant's resource limits... these are just 
     // examples, if there are more remote or local endpoints these values would
@@ -150,7 +183,7 @@ int main(void)
 
     //  set the name of the local DomainParticipant
     // (this is required for DPSE discovery)
-    strcpy(dp_qos.participant_name.name,local_participant_name.c_str());
+    strcpy(dp_qos.participant_name.name, k_PARTICIPANT01_NAME.c_str());
 
     // now the DomainParticipant can be created
     auto dp = DDS_DomainParticipantFactory_create_participant(
@@ -187,9 +220,7 @@ int main(void)
     }
 
     // assert remote DomainParticipant
-    retcode = DPSE_RemoteParticipant_assert(
-            dp, 
-            remote_participant_name.c_str());
+    retcode = DPSE_RemoteParticipant_assert(dp, k_PARTICIPANT02_NAME.c_str());
     if(retcode != DDS_RETCODE_OK) {
         std::cout << "ERROR: failed to assert remote participant" << std::endl;
     }
@@ -207,7 +238,7 @@ int main(void)
     // Configure the DataWriter's QoS, then create the DataWriter
     struct DDS_DataWriterQos dw_qos = DDS_DataWriterQos_INITIALIZER;
 
-    dw_qos.protocol.rtps_object_id = 100;
+    dw_qos.protocol.rtps_object_id = k_OBJ_ID_PARTICIPANT01_DW01;
     dw_qos.reliability.kind = DDS_RELIABLE_RELIABILITY_QOS;
     dw_qos.resource_limits.max_samples_per_instance = 32;
     dw_qos.resource_limits.max_instances = 2;
@@ -230,14 +261,15 @@ int main(void)
     // setup information about the subscriber we are expecting to discover 
     struct DDS_SubscriptionBuiltinTopicData rem_subscription_data =
             DDS_SubscriptionBuiltinTopicData_INITIALIZER;
-    rem_subscription_data.key.value[DDS_BUILTIN_TOPIC_KEY_OBJECT_ID] = 200;
+    rem_subscription_data.key.value[DDS_BUILTIN_TOPIC_KEY_OBJECT_ID] = 
+            k_OBJ_ID_PARTICIPANT02_DR01;
     rem_subscription_data.topic_name = DDS_String_dup(my_topic_name);
     rem_subscription_data.type_name = DDS_String_dup(type_name.c_str());
     rem_subscription_data.reliability.kind = DDS_RELIABLE_RELIABILITY_QOS;
 
     retcode = DPSE_RemoteSubscription_assert(
             dp,
-            remote_participant_name.c_str(),
+            k_PARTICIPANT02_NAME.c_str(),
             &rem_subscription_data,
             my_type_get_key_kind(my_typeTypePlugin_get(), NULL));
     if (retcode != DDS_RETCODE_OK) {
@@ -250,7 +282,7 @@ int main(void)
         std::cout << "ERROR: failed my_type_create" << std::endl;
     }
 
-    // Finaly, now that all of the entities are created, we can enable them all
+    // Finally, now that all of the entities are created, we can enable them all
     auto entity = DDS_DomainParticipant_as_entity(dp);
     retcode = DDS_Entity_enable(entity);
     if(retcode != DDS_RETCODE_OK) {
@@ -277,7 +309,7 @@ int main(void)
             std::cout << "Wrote sample " << i << std::endl;
             i++;
         } 
-        OSAPI_Thread_sleep(1000); // sleep 1s between writes 
+        sleep(1); // sleep 1s between writes 
     }
 }
 
