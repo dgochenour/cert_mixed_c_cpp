@@ -97,7 +97,7 @@ int main(void)
     }
 
     // Set up the UDP transport's allowed interfaces. To do this we:
-    // (1) unregister the UDP trasport
+    // (1) unregister the UDP transport
     // (2) name the allowed interfaces
     // (3) re-register the transport
     if (!RT_Registry_unregister(
