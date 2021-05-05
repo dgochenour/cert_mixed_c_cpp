@@ -22,8 +22,8 @@ int main(void)
 {
     // user-configurable values
     std::string peer = "127.0.0.1";
-    std::string loopback_name = "lo0";
-    std::string eth_nic_name = "en0";
+    std::string loopback_name = "lo";
+    std::string eth_nic_name = "wlp0s20f3";
     std::string local_participant_name = "publisher";
     std::string remote_participant_name = "subscriber";
     auto domain_id = 100;

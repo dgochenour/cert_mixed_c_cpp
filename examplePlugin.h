@@ -12,7 +12,7 @@ or consult the RTI Data Distribution Service manual.
 
 #include "example.h"
 
-#if (defined(RTI_WIN32) || defined(RTI_WIN64) || defined(RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
+#if (defined(RTI_WIN32) || defined(RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
 /* If the code is building on Windows, start exporting symbols. */
 #undef NDDSUSERDllExport
 #define NDDSUSERDllExport __declspec(dllexport)
@@ -88,10 +88,10 @@ extern "C" {
         struct CDR_Stream_t *stream, DDS_KeyHash_t *keyHash, const void *instance,
         void *param);
     #ifdef __cplusplus
-}
+} /* extern "C" */
 #endif
 
-#if (defined(RTI_WIN32) || defined(RTI_WIN64) || defined(RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
+#if (defined(RTI_WIN32) || defined(RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
 /* If the code is building on Windows, stop exporting symbols. */
 #undef NDDSUSERDllExport
 #define NDDSUSERDllExport

@@ -28,7 +28,9 @@ my_type_initialize(my_type* sample)
     }
 
     CDR_Primitive_init_long(&sample->id);
-    if (!CDR_String_initialize(&sample->msg, (128)))
+    if (!CDR_String_initialize(
+        &sample->msg,
+        (128)))
     {
         return RTI_FALSE;
     }
@@ -40,8 +42,10 @@ my_type_create(void)
 {
     my_type* sample;
     OSAPI_Heap_allocate_struct(&sample, my_type);
-    if (sample != NULL) {
-        if (!my_type_initialize(sample)) {
+    if (sample != NULL)
+    {
+        if (!my_type_initialize(sample))
+        {
             OSAPI_Heap_free_struct(sample);
             sample = NULL;
         }
@@ -63,16 +67,19 @@ my_type_finalize(my_type* sample)
     return RTI_TRUE;
 }
 
+#ifndef RTI_CERT
 void
-my_type_delete(my_type*sample)
+my_type_delete(my_type* sample)
 {
-    if (sample != NULL) {
+    if (sample != NULL)
+    {
         /* my_type_finalize() always 
         returns RTI_TRUE when called with sample != NULL */
         my_type_finalize(sample);
         OSAPI_Heap_free_struct(sample);
     }
 }
+#endif
 #endif
 
 RTI_BOOL
@@ -83,7 +90,9 @@ my_type_copy(my_type* dst,const my_type* src)
         return RTI_FALSE;
     }
     CDR_Primitive_copy_long(&dst->id, &src->id);
-    if (!CDR_String_copy(&dst->msg, &src->msg, (128)))
+    if (!CDR_String_copy(
+        &dst->msg, &src->msg,
+        (128)))
     {
         return RTI_FALSE;
     }

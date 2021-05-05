@@ -64,8 +64,8 @@ int main(void)
 {
     // user-configurable values
     std::string peer = "127.0.0.1";
-    std::string loopback_name = "lo0";
-    std::string eth_nic_name = "en0";
+    std::string loopback_name = "lo";
+    std::string eth_nic_name = "wlp0s20f3";
     auto domain_id = 100;
 
     DDS_ReturnCode_t retcode;
