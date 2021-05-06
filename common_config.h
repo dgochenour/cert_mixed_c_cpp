@@ -13,7 +13,17 @@
 
 #include <iostream>
 
+// DDS Domain
 auto domain_id = 100;
+
+// network interface information
+const std::string    k_loopback_name("loopback");
+const unsigned int   k_loopback_ip(0x7f000001);
+const unsigned int   k_loopback_mask(0xff000000);
+
+const std::string    k_real_nic_name("real_nic");
+const unsigned int   k_real_nic_ip(0xc0a80103);
+const unsigned int   k_real_nic_mask(0xffffff00);
 
 // discovery-related constants for example_publisher
 static const std::string k_publisher_initial_peer   = "127.0.0.1";
