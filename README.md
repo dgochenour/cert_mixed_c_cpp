@@ -5,9 +5,9 @@
 This example contains publisher and subscriber applications for a simple IDL-defined data type. The purpose of this example is to demonstrate that the Connext Cert C-language API can be used from a C++11 (or newer) application. Such functionality may be interesting 
 to developers eventually deploying safety-critical applications that use Connext Cert libraries.
 
-This example in designed to link against libraries from the Connext DDS Micro 2.4.14 release built in a Cert-compatible configuration. With that in mind, a few choices were make the example code "Cert friendly."
-* The available API in Connext Cert is based on C.  
-* DPSE discovery is used as actual safety-certified libraries (ISO 26262, for example) implement the static DPSE discovery plugin only; DPDE is not available.
+This example in designed to link against libraries from the Connext DDS Micro 2.4.14 release built in a Cert-compatible configuration. With that in mind, a few choices were made to make the example code "Cert friendly."
+* The available API in Connext Cert is based on C; this is why the DDS C API is used here, even though the application code is C++.  
+* DPSE discovery is used because actual safety-certified libraries (ISO 26262, for example) implement the static DPSE discovery plugin only; DPDE is not available.
 
 ## Source Overview
 
@@ -49,15 +49,15 @@ These files contain the language-specific type implementation and the APIs for m
 
 ### Linux
     cd $RTIMEHOME
-    ./resource/scripts/rtime-make --target Linux --name ${RTIMEARCH}_cert -G "Unix Makefiles" --build --config Release
-    ./resource/scripts/rtime-make --target Linux --name ${RTIMEARCH}_cert -G "Unix Makefiles" --build --config Debug
+    ./resource/scripts/rtime-make --target Linux --name ${RTIMEARCH}_cert -G "Unix Makefiles" --build -DRTIME_CERT=1 --config Release 
+    ./resource/scripts/rtime-make --target Linux --name ${RTIMEARCH}_cert -G "Unix Makefiles" --build -DRTIME_CERT=1 --config Debug
 
 ## Building the Examples
 
 ### Linux
 
     cd your/project/directory 
-    $ $RTIMEHOME/resource/scripts/rtime-make --config Release --build --name ${RTIMEARCH}_cert --target Linux --source-dir . -G "Unix Makefiles" --delete
+    $ $RTIMEHOME/resource/scripts/rtime-make --target Linux --name ${RTIMEARCH}_cert -G "Unix Makefiles" --build -DRTIME_CERT=1 --config Release --source-dir . --delete
 
 The executables can be found in the ./objs/<architecture> directory
 
