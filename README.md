@@ -19,10 +19,6 @@ For any user-defined type to be useable by Connext Micro or Connext Cert, type-s
 
     $ $RTIMEHOME/rtiddsgen/scripts/rtiddsgen -micro -language C -create typefiles ./example.idl
 
-### Windows:
-
-    > %RTIMEHOME%\rtiddsgen\scripts\rtiddsgen -micro -language C -create typefiles example.idl
-
 
 The generated source files are example.c, exampleSupport.c, and 
 examplePlugin.c. Associated header files are also generated. These source files are used by the middleware, and by the example_publisher.cxx and example_subscriber.cxx applications. Each application-- publisher and subscriber-- is wholely self-contained since the intent is that the executables may run independently of each other, and on different CPU/OS instances.
