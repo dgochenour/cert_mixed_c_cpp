@@ -29,6 +29,8 @@ extern "C" void my_typeSubscriber_on_data_available(
         void *listener_data,
         DDS_DataReader * reader)
 {
+    (void)(listener_data);  // to suppress -Wunused-parameter warning
+
     auto hw_reader = my_typeDataReader_narrow(reader);
     struct DDS_SampleInfoSeq info_seq = DDS_SEQUENCE_INITIALIZER;
     struct my_typeSeq sample_seq = DDS_SEQUENCE_INITIALIZER;
@@ -130,31 +132,37 @@ int main(void)
         printf("failed to set if_table maximum\n");
         return -1;
     }
+
     *DDS_StringSeq_get_reference(&udp_property->allow_interface,0) = 
-            DDS_String_dup("loopback");
+            DDS_String_dup(k_loopback_name.c_str());
     if (!UDP_InterfaceTable_add_entry(
             &udp_property->if_table,
-            0x7f000001,
-            0xff000000,
-            "loopback",
-            UDP_INTERFACE_INTERFACE_UP_FLAG))
+            k_loopback_ip,
+            k_loopback_mask,
+            k_loopback_name.c_str(),
+            UDP_INTERFACE_INTERFACE_UP_FLAG)) 
     {
-        printf("failed to add 'loopback' interface\n");
+        std::cout << "ERROR: failed to add " << k_loopback_name.c_str() <<
+                "interface" << std::endl;
         return -1;
     }
 
     *DDS_StringSeq_get_reference(&udp_property->allow_interface,1) = 
-            DDS_String_dup("real_nic");
+            DDS_String_dup(k_real_nic_name.c_str());
     if (!UDP_InterfaceTable_add_entry(
             &udp_property->if_table,
-            0xc0a80174, //192.168.1.116
-            0xffffff00, //255.255.255.0
-            "real_nic",
-            UDP_INTERFACE_INTERFACE_UP_FLAG))
+            k_real_nic_ip,
+            k_real_nic_mask,
+            k_real_nic_name.c_str(),
+            UDP_INTERFACE_INTERFACE_UP_FLAG)) 
     {
-        printf("failed to add 'real_nic' interface\n");
+        std::cout << "ERROR: failed to add " << k_loopback_name.c_str() <<
+                "interface" << std::endl;
         return -1;
     }
+
+    //explicitly set the "real NIC" as the multicast interface
+    udp_property->multicast_interface = DDS_String_dup(k_real_nic_name.c_str());
 
     if(!RT_Registry_register(
             registry, 
