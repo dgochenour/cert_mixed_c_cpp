@@ -18,8 +18,6 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     SET(PLATFORM_LIBS dl nsl m pthread rt)
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     SET(PLATFORM_LIBS dl m pthread )
-elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-    SET(PLATFORM_LIBS netapi32.lib advapi32.lib user32.lib winmm.lib WS2_32.lib)
 endif()
 
 set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
