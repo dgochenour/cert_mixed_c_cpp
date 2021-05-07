@@ -57,20 +57,19 @@ These files contain the language-specific type implementation and the APIs for m
 
 The executables can be found in the ./objs/<architecture> directory
 
-Note that there a few variables at the top of main() in both the publisher and
-subscriber code that may need to be changed to match your system:
+Note that different systems may have different interface names, and almost certainly will have different IP addresses. The file `common_config.h` contains interface configuration information that is used by both the publishing and subscribing applications: 
 
-    // user-configurable values
-    std::string peer = "127.0.0.1";
-    std::string loopback_name = "lo0";
-    std::string eth_nic_name = "en0";
-    auto domain_id = 100;
+    // network interface information
+    const std::string    k_loopback_name("loopback");
+    const unsigned int   k_loopback_ip(0x7f000001);
+    const unsigned int   k_loopback_mask(0xff000000);
 
-By default, the remote peer is set to the loopback address (allowing the 
-examples to discover each other on the same machine only) and DDS Domain 100 is 
-used. The names of the network interfaces should match the actual host where the
-example is running. 
+    const std::string    k_real_nic_name("real_nic");
+    const unsigned int   k_real_nic_ip(0xc0a80174);
+    const unsigned int   k_real_nic_mask(0xffffff00);
 
+`k_loopback_name` and `k_real_nic_name` need not match the *actual names* of the network interfaces as assigned by the OS. That is: on Ubunu 20.04 for example, it's OK to set `k_real_nic_name("real_nic")` instead of `k_real_nic_name("wlp0s20f3")`. By default, the remote peer is set to the loopback address (allowing the examples to discover each other on the same machine only) and DDS Domain 100 is 
+used. 
 
 ## Running example_publisher and example_subscriber
 
