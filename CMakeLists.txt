@@ -49,8 +49,14 @@ set(IDL_GEN_H
     ${CMAKE_CURRENT_SOURCE_DIR}/exampleSupport.h
 )
 
-SET(MICRO_C_LIBS rti_me${RTI_LIB_SUFFIX})
-ADD_DEFINITIONS(-DRTI_CERT)
+#SET(MICRO_C_LIBS rti_me${RTI_LIB_SUFFIX})
+#ADD_DEFINITIONS(-DRTI_CERT)
+set(MICRO_C_LIBS 
+    rti_me_rhsm${RTI_LIB_SUFFIX} 
+    rti_me_whsm${RTI_LIB_SUFFIX} 
+    rti_me_discdpse${RTI_LIB_SUFFIX} 
+    rti_me${RTI_LIB_SUFFIX}
+)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
